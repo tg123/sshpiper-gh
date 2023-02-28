@@ -82,6 +82,15 @@ func main() {
 						}
 					}()
 
+					{
+						// check if retry
+						upstream, _ := store.GetUpstream(session)
+						if upstream != nil {
+							_, _ = client("", fmt.Sprintf("your password/private key in sshpiper.yaml auth failed with upstream %v", upstream.Host), "", false)
+							return nil, fmt.Errorf("bad upstream credential")
+						}
+					}
+
 					_, _ = client("", fmt.Sprintf("please open %v/pipe/%v with your browser to verify (timeout 1m)", baseurl, session), "", false)
 
 					st := time.Now()
@@ -133,7 +142,8 @@ func main() {
 							return u, nil
 						}
 
-						return nil, fmt.Errorf("no valid auth method found")
+						u.Auth = libplugin.CreateNoneAuth()
+						return u, nil
 					}
 				},
 				VerifyHostKeyCallback: func(conn libplugin.ConnMetadata, hostname, netaddr string, key []byte) error {
