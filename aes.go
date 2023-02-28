@@ -38,7 +38,7 @@ func decrypt(text string, key []byte) (string, error) {
 	if text == "" {
 		return "", nil
 	}
-	
+
 	ciphertext, err := base64.StdEncoding.DecodeString(text)
 	if err != nil {
 		return "", err
