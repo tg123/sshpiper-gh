@@ -9,7 +9,7 @@
                 "version": {
                     "type": "string"
                 },
-                "upstream:": {
+                "upstreams": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/upstream"
