@@ -1,0 +1,51 @@
+{
+    "$schema": "http://json-schema.org/draft-06/schema#",
+    "$ref": "#/definitions/sshpipergh",
+    "definitions": {
+        "sshpipergh": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "version": {
+                    "type": "string"
+                },
+                "upstream:": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/upstream"
+                    }
+                }
+            },
+            "required": [
+                "upstreams"
+            ]
+        },
+        "upstream": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "host": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "private_key_data": {
+                    "type": "string"
+                },
+                "known_hosts_data": {
+                    "type": "string"
+                },
+                "tags":{
+                    "type": "string"
+                }
+            },
+            "required": [
+                "host"
+            ]
+        }
+    }
+}
