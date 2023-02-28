@@ -94,7 +94,7 @@ func (w *web) approve(c *gin.Context) {
 			continue
 		}
 
-		if errmsg == "ok" {
+		if errmsg == errMsgPipeApprove {
 			infos = append(infos, "ssh pipe approved")
 		} else {
 			errors = append(errors, errmsg)

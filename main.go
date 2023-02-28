@@ -17,6 +17,9 @@ import (
 	githubendpoint "golang.org/x/oauth2/github"
 )
 
+const errMsgPipeApprove = "ok"
+const errMsgBadUpstreamCred = "bad upstream credential"
+
 func main() {
 
 	gin.DefaultWriter = os.Stderr
@@ -78,16 +81,20 @@ func main() {
 						if err != nil {
 							store.SetSshError(session, err.Error())
 						} else {
-							store.SetSshError(session, "ok")
+							store.SetSshError(session, errMsgPipeApprove)
 						}
 					}()
 
 					{
 						// check if retry
-						upstream, _ := store.GetUpstream(session)
-						if upstream != nil {
-							_, _ = client("", fmt.Sprintf("your password/private key in sshpiper.yaml auth failed with upstream %v", upstream.Host), "", false)
-							return nil, fmt.Errorf("bad upstream credential")
+						lasterr := store.GetSshError(session)
+						if lasterr == errMsgPipeApprove {
+							_, _ = client("", "your password/private key in sshpiper.yaml auth failed with upstream", "", false)
+							return nil, fmt.Errorf(errMsgBadUpstreamCred)
+						}
+
+						if lasterr == errMsgBadUpstreamCred {
+							return nil, fmt.Errorf(errMsgBadUpstreamCred)
 						}
 					}
 
@@ -127,6 +134,11 @@ func main() {
 						password, _ := decrypt(upstream.Password, key)
 						privateKeyData, _ := decrypt(upstream.PrivateKeyData, key)
 
+						remoteuser := upstream.Username
+						if remoteuser == "" {
+							remoteuser = conn.User()
+						}
+
 						if privateKeyData != "" {
 							priv, err := base64.StdEncoding.DecodeString(privateKeyData)
 							if err != nil {
@@ -134,13 +146,21 @@ func main() {
 							}
 
 							u.Auth = libplugin.CreatePrivateKeyAuth(priv)
+
+							_, _ = client("", fmt.Sprintf("piping to %v@%v with private key", remoteuser, upstream.Host), "", false)
+
 							return u, nil
 						}
 
 						if password != "" {
 							u.Auth = libplugin.CreatePasswordAuth([]byte(password))
+
+							_, _ = client("", fmt.Sprintf("piping to %v@%v with password", remoteuser, upstream.Host), "", false)
+
 							return u, nil
 						}
+
+						_, _ = client("", fmt.Sprintf("piping to %v@%v with none auth", remoteuser, upstream.Host), "", false)
 
 						u.Auth = libplugin.CreateNoneAuth()
 						return u, nil
