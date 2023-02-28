@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/tg123/sshpiper-gh/main/schema.json
+upstreams:
+  # pipe to example@github.com with password `fake`
+  - host: github.com
+    username: exmaple
+    password: fake
+    tags: 'sshpiper' # optional, you will see this in login page
+  # pipe to github.com with base64 privatekey
+  - host: github.com
+    private_key_data: '<base64 private key>'
+    known_hosts_data: '<base64 known hosts>' # this will force sshpiper to check upstream host key if provide
+
+
+
