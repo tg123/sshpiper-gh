@@ -2,6 +2,8 @@ module github.com/tg123/sshpiper-gh
 
 go 1.20
 
+replace golang.org/x/crypto => github.com/tg123/sshpiper.crypto v0.0.0-20230215225113-0598fea726dd
+
 require (
 	github.com/gin-gonic/gin v1.9.0
 	github.com/google/go-github/v50 v50.1.0
