@@ -4,15 +4,12 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
-	"net"
 	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/tg123/sshpiper/libplugin"
 	"github.com/urfave/cli/v2"
-	"golang.org/x/crypto/ssh"
-	"golang.org/x/crypto/ssh/knownhosts"
 	"golang.org/x/oauth2"
 	githubendpoint "golang.org/x/oauth2/github"
 )
@@ -184,22 +181,7 @@ func main() {
 						return err
 					}
 
-					hostKeyCallback, err := knownhosts.NewFromReader(bytes.NewBuffer(data))
-					if err != nil {
-						return err
-					}
-
-					pub, err := ssh.ParsePublicKey(key)
-					if err != nil {
-						return err
-					}
-
-					addr, err := net.ResolveTCPAddr("tcp", netaddr)
-					if err != nil {
-						return err
-					}
-
-					return hostKeyCallback(hostname, addr, pub)
+					return libplugin.VerifyHostKeyFromKnownHosts(bytes.NewBuffer(data), hostname, netaddr, key)
 				},
 			}, nil
 		},
