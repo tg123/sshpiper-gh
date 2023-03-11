@@ -95,7 +95,7 @@ func main() {
 
 						// check if retry
 						if *lasterr != errMsgBadUpstreamCred {
-							_, _ = client("", fmt.Sprintf("your password/private key in sshpiper.yaml auth failed with upstream %v", lasterr), "", false)
+							_, _ = client("", fmt.Sprintf("your password/private key in sshpiper.yaml auth failed with upstream %v", *lasterr), "", false)
 							store.SetSshError(session, errMsgBadUpstreamCred) // set already notified
 						}
 
