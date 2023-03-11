@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"math/rand"
+	"net"
 	"os"
 	"time"
 
@@ -74,11 +76,24 @@ func main() {
 				KeyboardInteractiveCallback: func(conn libplugin.ConnMetadata, client libplugin.KeyboardInteractiveChallenge) (u *libplugin.Upstream, err error) {
 					session := conn.UniqueID()
 
+					defer func() {
+						if err != nil {
+							store.SetSshError(session, err.Error())
+						} else {
+							store.SetSshError(session, errMsgPipeApprove) // this happens before pipestart, but it's ok because pipestart may timeout due to network issues
+						}
+					}()
+
 					{
-						// check if retry
 						lasterr := store.GetSshError(session)
 						if lasterr != "" {
-							_, _ = client("", fmt.Sprintf("your password/private key in sshpiper.yaml auth failed with upstream %v", lasterr), "", false)
+
+							// check if retry
+							if lasterr != errMsgBadUpstreamCred {
+								_, _ = client("", fmt.Sprintf("your password/private key in sshpiper.yaml auth failed with upstream %v", lasterr), "", false)
+								store.SetSshError(session, errMsgBadUpstreamCred) // set already notified
+							}
+
 							return nil, fmt.Errorf(errMsgBadUpstreamCred)
 						}
 					}
@@ -109,6 +124,27 @@ func main() {
 							return nil, err
 						}
 
+						// nslookup host
+						ips, err := net.LookupIP(host)
+						if err != nil {
+							return nil, err
+						}
+
+						var resolvedips []string
+
+						for _, ip := range ips {
+							if !ip.IsPrivate() {
+								resolvedips = append(resolvedips, ip.String())
+							}
+						}
+
+						if len(resolvedips) == 0 {
+							return nil, fmt.Errorf("no public ip found for %v", host)
+						}
+
+						// choose random ip from resolveips
+						host = resolvedips[rand.Intn(len(resolvedips))]
+
 						u = &libplugin.Upstream{
 							UserName:      upstream.Username,
 							Host:          host,
@@ -132,7 +168,7 @@ func main() {
 
 							u.Auth = libplugin.CreatePrivateKeyAuth(priv)
 
-							_, _ = client("", fmt.Sprintf("piping to %v@%v with private key", remoteuser, upstream.Host), "", false)
+							_, _ = client("", fmt.Sprintf("piping to %v@%v %v with private key", remoteuser, upstream.Host, host), "", false)
 
 							return u, nil
 						}
@@ -140,12 +176,12 @@ func main() {
 						if password != "" {
 							u.Auth = libplugin.CreatePasswordAuth([]byte(password))
 
-							_, _ = client("", fmt.Sprintf("piping to %v@%v with password", remoteuser, upstream.Host), "", false)
+							_, _ = client("", fmt.Sprintf("piping to %v@%v %v with password", remoteuser, upstream.Host, host), "", false)
 
 							return u, nil
 						}
 
-						_, _ = client("", fmt.Sprintf("piping to %v@%v with none auth", remoteuser, upstream.Host), "", false)
+						_, _ = client("", fmt.Sprintf("piping to %v@%v %v with none auth", remoteuser, upstream.Host, host), "", false)
 
 						u.Auth = libplugin.CreateNoneAuth()
 						return u, nil

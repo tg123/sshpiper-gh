@@ -15,7 +15,7 @@ func ExampleDebugTemplate() {
 	r.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, templatefile, gin.H{
 			// "errors": []string{"err"},
-			"infos":  []string{"info"},
+			"infos": []string{"info"},
 			"upstreams": []upstreamConfig{
 				{
 					Host:     "host1",
