@@ -2,15 +2,15 @@ module github.com/tg123/sshpiper-gh
 
 go 1.20
 
-replace golang.org/x/crypto => github.com/tg123/sshpiper.crypto v0.0.0-20230215225113-0598fea726dd
+replace golang.org/x/crypto => github.com/tg123/sshpiper.crypto v0.0.0-20230308112616-d8f78e9617d3
 
 require (
 	github.com/gin-gonic/gin v1.9.0
 	github.com/google/go-github/v50 v50.1.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
-	github.com/tg123/sshpiper v1.0.94
-	github.com/urfave/cli/v2 v2.24.4
-	golang.org/x/oauth2 v0.5.0
+	github.com/tg123/sshpiper v1.0.96
+	github.com/urfave/cli/v2 v2.23.7
+	golang.org/x/oauth2 v0.6.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -39,9 +39,9 @@ require (
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	golang.org/x/arch v0.0.0-20210923205945-b76863e36670 // indirect
 	golang.org/x/crypto v0.6.0 // indirect
-	golang.org/x/net v0.7.0 // indirect
-	golang.org/x/sys v0.5.0 // indirect
-	golang.org/x/text v0.7.0 // indirect
+	golang.org/x/net v0.8.0 // indirect
+	golang.org/x/sys v0.6.0 // indirect
+	golang.org/x/text v0.8.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230110181048-76db0878b65f // indirect
 	google.golang.org/grpc v1.53.0-dev.0.20230123225046-4075ef07c5d5 // indirect

@@ -15,6 +15,8 @@ type sessionstore interface {
 
 	SetSshError(session string, err string) error
 	GetSshError(session string) (err string)
+
+	DeleteSession(session string, keeperr bool) error
 }
 
 type sessionstoreMemory struct {
@@ -67,4 +69,13 @@ func (s *sessionstoreMemory) GetSshError(session string) (err string) {
 	}
 
 	return ssherror.(string)
+}
+
+func (s *sessionstoreMemory) DeleteSession(session string, keeperr bool) error {
+	s.store.Delete(session + "-secret")
+	s.store.Delete(session + "-upstream")
+	if !keeperr {
+		s.store.Delete(session + "-ssherror")
+	}
+	return nil
 }

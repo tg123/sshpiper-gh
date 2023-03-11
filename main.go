@@ -74,23 +74,11 @@ func main() {
 				KeyboardInteractiveCallback: func(conn libplugin.ConnMetadata, client libplugin.KeyboardInteractiveChallenge) (u *libplugin.Upstream, err error) {
 					session := conn.UniqueID()
 
-					defer func() {
-						if err != nil {
-							store.SetSshError(session, err.Error())
-						} else {
-							store.SetSshError(session, errMsgPipeApprove)
-						}
-					}()
-
 					{
 						// check if retry
 						lasterr := store.GetSshError(session)
-						if lasterr == errMsgPipeApprove {
-							_, _ = client("", "your password/private key in sshpiper.yaml auth failed with upstream", "", false)
-							return nil, fmt.Errorf(errMsgBadUpstreamCred)
-						}
-
-						if lasterr == errMsgBadUpstreamCred {
+						if lasterr != "" {
+							_, _ = client("", fmt.Sprintf("your password/private key in sshpiper.yaml auth failed with upstream %v", lasterr), "", false)
 							return nil, fmt.Errorf(errMsgBadUpstreamCred)
 						}
 					}
@@ -162,6 +150,19 @@ func main() {
 						u.Auth = libplugin.CreateNoneAuth()
 						return u, nil
 					}
+				},
+				UpstreamAuthFailureCallback: func(conn libplugin.ConnMetadata, method string, err error, allowmethods []string) {
+					session := conn.UniqueID()
+					store.SetSshError(session, err.Error())
+				},
+				PipeStartCallback: func(conn libplugin.ConnMetadata) {
+					session := conn.UniqueID()
+					store.SetSshError(session, errMsgPipeApprove)
+					store.DeleteSession(session, true)
+				},
+				PipeErrorCallback: func(conn libplugin.ConnMetadata, err error) {
+					session := conn.UniqueID()
+					store.DeleteSession(session, false)
 				},
 				VerifyHostKeyCallback: func(conn libplugin.ConnMetadata, hostname, netaddr string, key []byte) error {
 					session := conn.UniqueID()
