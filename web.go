@@ -82,22 +82,21 @@ func (w *web) approve(c *gin.Context) {
 
 	for {
 
-		key, _ := w.sessionstore.GetSecret(session)
-		if key == nil {
+		errmsg := w.sessionstore.GetSshError(session)
+		if errmsg == nil {
 			errors = append(errors, "session expired")
 			break
 		}
 
-		errmsg := w.sessionstore.GetSshError(session)
-		if errmsg == "" {
+		if *errmsg == "" {
 			time.Sleep(time.Millisecond * 300)
 			continue
 		}
 
-		if errmsg == errMsgPipeApprove {
+		if *errmsg == errMsgPipeApprove {
 			infos = append(infos, "ssh pipe approved")
 		} else {
-			errors = append(errors, errmsg)
+			errors = append(errors, *errmsg)
 		}
 
 		break

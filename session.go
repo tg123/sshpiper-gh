@@ -14,7 +14,7 @@ type sessionstore interface {
 	SetUpstream(session string, upstream *upstreamConfig) error
 
 	SetSshError(session string, err string) error
-	GetSshError(session string) (err string)
+	GetSshError(session string) (err *string)
 
 	DeleteSession(session string, keeperr bool) error
 }
@@ -58,17 +58,17 @@ func (s *sessionstoreMemory) SetUpstream(session string, upstream *upstreamConfi
 }
 
 func (s *sessionstoreMemory) SetSshError(session string, err string) error {
-	s.store.Set(session+"-ssherror", err, cache.DefaultExpiration)
+	s.store.Set(session+"-ssherror", &err, cache.DefaultExpiration)
 	return nil
 }
 
-func (s *sessionstoreMemory) GetSshError(session string) (err string) {
+func (s *sessionstoreMemory) GetSshError(session string) (err *string) {
 	ssherror, found := s.store.Get(session + "-ssherror")
 	if !found {
-		return ""
+		return nil
 	}
 
-	return ssherror.(string)
+	return ssherror.(*string)
 }
 
 func (s *sessionstoreMemory) DeleteSession(session string, keeperr bool) error {

@@ -84,21 +84,23 @@ func main() {
 						}
 					}()
 
-					{
-						lasterr := store.GetSshError(session)
-						if lasterr != "" {
+					lasterr := store.GetSshError(session)
 
-							// check if retry
-							if lasterr != errMsgBadUpstreamCred {
-								_, _ = client("", fmt.Sprintf("your password/private key in sshpiper.yaml auth failed with upstream %v", lasterr), "", false)
-								store.SetSshError(session, errMsgBadUpstreamCred) // set already notified
-							}
+					if lasterr == nil {
+						// new session
+						_, _ = client("", fmt.Sprintf("please open %v/pipe/%v with your browser to verify (timeout 1m)", baseurl, session), "", false)
+						store.SetSshError(session, "") // set waiting for approval
 
-							return nil, fmt.Errorf(errMsgBadUpstreamCred)
+					} else if *lasterr != "" {
+
+						// check if retry
+						if *lasterr != errMsgBadUpstreamCred {
+							_, _ = client("", fmt.Sprintf("your password/private key in sshpiper.yaml auth failed with upstream %v", lasterr), "", false)
+							store.SetSshError(session, errMsgBadUpstreamCred) // set already notified
 						}
-					}
 
-					_, _ = client("", fmt.Sprintf("please open %v/pipe/%v with your browser to verify (timeout 1m)", baseurl, session), "", false)
+						return nil, fmt.Errorf(errMsgBadUpstreamCred)
+					}
 
 					st := time.Now()
 
@@ -124,13 +126,11 @@ func main() {
 							return nil, err
 						}
 
-						// nslookup host
+						var resolvedips []string
 						ips, err := net.LookupIP(host)
 						if err != nil {
 							return nil, err
 						}
-
-						var resolvedips []string
 
 						for _, ip := range ips {
 							if !ip.IsPrivate() {
@@ -143,11 +143,17 @@ func main() {
 						}
 
 						// choose random ip from resolveips
-						host = resolvedips[rand.Intn(len(resolvedips))]
+						selectedip := resolvedips[rand.Intn(len(resolvedips))]
+
+						hosttoshow := upstream.Host
+
+						if host != selectedip {
+							hosttoshow = fmt.Sprintf("%v (%v)", upstream.Host, selectedip)
+						}
 
 						u = &libplugin.Upstream{
 							UserName:      upstream.Username,
-							Host:          host,
+							Host:          selectedip,
 							Port:          int32(port),
 							IgnoreHostKey: upstream.KnownHostsData == "",
 						}
@@ -168,7 +174,7 @@ func main() {
 
 							u.Auth = libplugin.CreatePrivateKeyAuth(priv)
 
-							_, _ = client("", fmt.Sprintf("piping to %v@%v %v with private key", remoteuser, upstream.Host, host), "", false)
+							_, _ = client("", fmt.Sprintf("piping to %v@%v with private key", remoteuser, hosttoshow), "", false)
 
 							return u, nil
 						}
@@ -176,12 +182,12 @@ func main() {
 						if password != "" {
 							u.Auth = libplugin.CreatePasswordAuth([]byte(password))
 
-							_, _ = client("", fmt.Sprintf("piping to %v@%v %v with password", remoteuser, upstream.Host, host), "", false)
+							_, _ = client("", fmt.Sprintf("piping to %v@%v with password", remoteuser, hosttoshow), "", false)
 
 							return u, nil
 						}
 
-						_, _ = client("", fmt.Sprintf("piping to %v@%v %v with none auth", remoteuser, upstream.Host, host), "", false)
+						_, _ = client("", fmt.Sprintf("piping to %v@%v with none auth", remoteuser, hosttoshow), "", false)
 
 						u.Auth = libplugin.CreateNoneAuth()
 						return u, nil
@@ -190,6 +196,7 @@ func main() {
 				UpstreamAuthFailureCallback: func(conn libplugin.ConnMetadata, method string, err error, allowmethods []string) {
 					session := conn.UniqueID()
 					store.SetSshError(session, err.Error())
+					store.DeleteSession(session, true)
 				},
 				PipeStartCallback: func(conn libplugin.ConnMetadata) {
 					session := conn.UniqueID()
