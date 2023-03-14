@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"fmt"
 	"math/rand"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sethvargo/go-limiter/memorystore"
 	"github.com/tg123/sshpiper/libplugin"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/oauth2"
@@ -71,6 +73,16 @@ func main() {
 			go func() {
 				panic(w.Run(c.String("webaddr")))
 			}()
+
+			limiter, err := memorystore.New(&memorystore.Config{
+				Tokens:      3,
+				Interval:    time.Minute,
+				SweepMinTTL: time.Minute * 5,
+			})
+
+			if err != nil {
+				return nil, err
+			}
 
 			return &libplugin.SshPiperPluginConfig{
 				KeyboardInteractiveCallback: func(conn libplugin.ConnMetadata, client libplugin.KeyboardInteractiveChallenge) (u *libplugin.Upstream, err error) {
@@ -192,6 +204,19 @@ func main() {
 						u.Auth = libplugin.CreateNoneAuth()
 						return u, nil
 					}
+				},
+				NewConnectionCallback: func(conn libplugin.ConnMetadata) error {
+					ip, _, _ := net.SplitHostPort(conn.RemoteAddr())
+					_, _, _, ok, err := limiter.Take(context.Background(), ip)
+					if err != nil {
+						return err
+					}
+
+					if !ok {
+						return fmt.Errorf("too many connections")
+					}
+
+					return nil
 				},
 				UpstreamAuthFailureCallback: func(conn libplugin.ConnMetadata, method string, err error, allowmethods []string) {
 					session := conn.UniqueID()

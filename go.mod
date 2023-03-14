@@ -8,6 +8,7 @@ require (
 	github.com/gin-gonic/gin v1.9.0
 	github.com/google/go-github/v50 v50.1.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
+	github.com/sethvargo/go-limiter v0.7.2
 	github.com/tg123/sshpiper v1.0.96
 	github.com/urfave/cli/v2 v2.23.7
 	golang.org/x/oauth2 v0.6.0
