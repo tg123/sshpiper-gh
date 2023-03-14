@@ -22,6 +22,8 @@ processes = []
 
   [[services.ports]]
     port = "22"
+    handlers = ["proxy_proto"]
+
 
 [[services]]
   http_checks = []
