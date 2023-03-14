@@ -231,6 +231,9 @@ func main() {
 				PipeErrorCallback: func(conn libplugin.ConnMetadata, err error) {
 					session := conn.UniqueID()
 					store.DeleteSession(session, false)
+
+					ip, _, _ := net.SplitHostPort(conn.RemoteAddr())
+					limiter.Burst(context.Background(), ip, 1)
 				},
 				VerifyHostKeyCallback: func(conn libplugin.ConnMetadata, hostname, netaddr string, key []byte) error {
 					session := conn.UniqueID()
