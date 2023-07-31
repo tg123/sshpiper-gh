@@ -5,13 +5,8 @@ kill_signal = "SIGINT"
 kill_timeout = 5
 processes = []
 
-[mounts]
-  source="cert"
-  destination="/cert"
-
 [env]
   SSHPIPERD_GITHUBAPP_BASEURL="https://sshpiper.com"
-  SSHPIPERD_SERVER_KEY="/cert/sshpiper_host"
 
 [experimental]
   auto_rollback = true
