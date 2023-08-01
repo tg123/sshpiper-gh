@@ -30,3 +30,9 @@ upstreams:
    ssh sshpiper.com
 please open https://sshpiper.com/pipe/09710885-cda5-41cf-8c73-e09617e07f01 with your browser to verify (timeout 1m)
 ```
+
+## sshpiper.com Public Key
+
+```
+sshpiper.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICKZHEtpQZNUXgVlGLViAy7P0264kbFUDnQR4E+mylWM
+```
