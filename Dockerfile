@@ -5,7 +5,7 @@ ENV CGO_ENABLED=0
 WORKDIR /src
 RUN --mount=target=/src,type=bind,source=. --mount=type=cache,target=/root/.cache/go-build go build -o /sshpiper-gh -buildvcs=false -tags timetzdata
 
-FROM farmer1992/sshpiperd:v1.2.7
+FROM farmer1992/sshpiperd:v1.3.0
 
 ENV PLUGIN=sshpiper-gh
 
